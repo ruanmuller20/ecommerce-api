@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { getFirestore } from "firebase-admin/firestore";
 
 
@@ -9,46 +9,66 @@ import { getFirestore } from "firebase-admin/firestore";
 // };
 
 export class UserController{
-  static async getAll(req: Request, res: Response) {
-    const snapshot = await getFirestore().collection('users').get();
-    const users = snapshot.docs.map(doc => {  
+  static async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const snapshot = await getFirestore().collection('users').get();
+      const users = snapshot.docs.map(doc => {  
       return{id: doc.id, ...doc.data()};
     });
-    res.send(users);
+      res.send(users);
+    } catch (error) {
+      next(error);
+    }
+
   };
 
-  static async getById(req: Request, res: Response){
-    let userId = req.params.id;
-    const doc = await getFirestore().collection('users').doc(userId).get();
-      res.send({
-        id: doc.id,
-        ...doc.data()
+  static async getById(req: Request, res: Response, next: NextFunction){
+    try {
+      let userId = req.params.id;
+      const doc = await getFirestore().collection('users').doc(userId).get();
+        res.send({
+          id: doc.id,
+          ...doc.data()
+        });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static async save (req: Request, res: Response, next: NextFunction){  
+    try {
+      let user = req.body
+      const userSalvo = await getFirestore().collection('users').add(user);
+      res.status(201).send({message: `Usuário ${userSalvo.id} criado com sucesso!`}); 
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static update(req: Request, res: Response, next: NextFunction){
+    try {
+      let userId = req.params.id;
+      let user = req.body;
+
+      getFirestore().collection('users').doc(userId).set({
+        nome: user.nome,
+        email: user.email
       });
+
+      res.send({message: 'Usuário alterado com sucesso!'});
+    } catch (error) {
+      next(error);
+    }
   };
 
-  static async save (req: Request, res: Response){  
-  let user = req.body
-  const userSalvo = await getFirestore().collection('users').add(user);
-  res.send({message: `Usuário ${userSalvo.id} criado com sucesso!`}); 
-  };
-
-  static update(req: Request, res: Response){
-    let userId = req.params.id;
-    let user = req.body;
-
-    getFirestore().collection('users').doc(userId).set({
-      nome: user.nome,
-      email: user.email
-    });
-
-    res.send({message: 'Usuário alterado com sucesso!'});
-  };
-
-  static async delete (req: Request, res: Response){
-    let userId = req.params.id;
-    await getFirestore().collection('users').doc(userId).delete();
-
-    res.send({message: 'Usuário deletado com sucesso!'});
+  static async delete (req: Request, res: Response, next: NextFunction){
+    try {
+      let userId = req.params.id;
+      await getFirestore().collection('users').doc(userId).delete();
+      res.status(204).end();
+    } catch (error) {
+      next(error)
+    }
   };
 
 }
