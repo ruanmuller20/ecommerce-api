@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { getFirestore } from "firebase-admin/firestore";
 import { ValidationError } from "../errors/validation.error";
+import { NotFoundError } from "../errors/not-found.error";
 
 
 // type User = {
@@ -27,10 +28,15 @@ export class UserController{
     try {
       let userId = req.params.id;
       const doc = await getFirestore().collection('users').doc(userId).get();
+      if(doc.exists){
         res.send({
-          id: doc.id,
-          ...doc.data()
+            id: doc.id,
+            ...doc.data()
         });
+      } else {
+        throw new NotFoundError('Usuário não encontrado');
+      }
+  
     } catch (error) {
       next(error);
     }
@@ -50,17 +56,22 @@ export class UserController{
     }
   };
 
-  static update(req: Request, res: Response, next: NextFunction){
+  static async update(req: Request, res: Response, next: NextFunction){
     try {
       let userId = req.params.id;
       let user = req.body;
+      let docRef = getFirestore().collection('users').doc(userId);
 
-      getFirestore().collection('users').doc(userId).set({
-        nome: user.nome,
-        email: user.email
-      });
+      if((await docRef.get()).exists){
+        await docRef.set({
+          nome: user.nome,
+          email: user.email
+        });
 
-      res.send({message: 'Usuário alterado com sucesso!'});
+        res.send({message: 'Usuário alterado com sucesso!'});
+      } else {
+         throw new NotFoundError('Usuário não encontrado');
+      }
     } catch (error) {
       next(error);
     }
