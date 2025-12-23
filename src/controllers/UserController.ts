@@ -12,21 +12,16 @@ import { NotFoundError } from "../errors/not-found.error";
 
 export class UserController{
   static async getAll(req: Request, res: Response, next: NextFunction) {
-    try {
-      const snapshot = await getFirestore().collection('users').get();
+    const snapshot = await getFirestore().collection('users').get();
       const users = snapshot.docs.map(doc => {  
       return{id: doc.id, ...doc.data()};
     });
-      res.send(users);
-    } catch (error) {
-      next(error);
-    }
+    res.send(users);
 
   };
 
   static async getById(req: Request, res: Response, next: NextFunction){
-    try {
-      let userId = req.params.id;
+     let userId = req.params.id;
       const doc = await getFirestore().collection('users').doc(userId).get();
       if(doc.exists){
         res.send({
@@ -36,28 +31,19 @@ export class UserController{
       } else {
         throw new NotFoundError('Usuário não encontrado');
       }
-  
-    } catch (error) {
-      next(error);
-    }
   };
 
   static async save (req: Request, res: Response, next: NextFunction){  
-    try {
-      let user = req.body
+    let user = req.body
       if (!user.email || user.email?.length === 0){
         throw new ValidationError('E-mail obrigatório');
       };
 
-      const userSalvo = await getFirestore().collection('users').add(user);
-      res.status(201).send({message: `Usuário ${userSalvo.id} criado com sucesso!`}); 
-    } catch (error) {
-      next(error);
-    }
+    const userSalvo = await getFirestore().collection('users').add(user);
+    res.status(201).send({message: `Usuário ${userSalvo.id} criado com sucesso!`}); 
   };
 
   static async update(req: Request, res: Response, next: NextFunction){
-    try {
       let userId = req.params.id;
       let user = req.body;
       let docRef = getFirestore().collection('users').doc(userId);
@@ -72,19 +58,12 @@ export class UserController{
       } else {
          throw new NotFoundError('Usuário não encontrado');
       }
-    } catch (error) {
-      next(error);
-    }
   };
 
   static async delete (req: Request, res: Response, next: NextFunction){
-    try {
-      let userId = req.params.id;
-      await getFirestore().collection('users').doc(userId).delete();
-      res.status(204).end();
-    } catch (error) {
-      next(error)
-    }
+    let userId = req.params.id;
+    await getFirestore().collection('users').doc(userId).delete();
+    res.status(204).end();
   };
 
 }
