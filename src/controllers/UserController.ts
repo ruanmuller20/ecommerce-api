@@ -1,13 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { getFirestore } from "firebase-admin/firestore";
 import { NotFoundError } from "../errors/not-found.error";
+import { User } from "../models/user.model";
 
 
-// type User = {
-//   id: number;
-//   nome: string;
-//   email: string
-// };
+
 
 export class UserController{
   static async getAll(req: Request, res: Response, next: NextFunction) {
@@ -42,7 +39,7 @@ export class UserController{
 
   static async update(req: Request, res: Response, next: NextFunction){
       let userId = req.params.id;
-      let user = req.body;
+      let user = req.body as User;
       let docRef = getFirestore().collection('users').doc(userId);
 
       if((await docRef.get()).exists){
