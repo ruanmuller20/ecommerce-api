@@ -33,6 +33,7 @@ export class UserRepository {
     };
 
     async save(user: User) {
+        delete user.password;
         await this.collection.add(user);
     };
 
